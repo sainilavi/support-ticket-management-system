@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SupportTicketManagementSystem.API/SupportTicketManagementSystem.API.csproj" />
+    <Project Path="src/SupportTicketManagementSystem.Application/SupportTicketManagementSystem.Application.csproj" />
+    <Project Path="src/SupportTicketManagementSystem.Domain/SupportTicketManagementSystem.Domain.csproj" />
+    <Project Path="src/SupportTicketManagementSystem.Infrastructure/SupportTicketManagementSystem.Infrastructure.csproj" />
+  </Folder>
+</Solution>
