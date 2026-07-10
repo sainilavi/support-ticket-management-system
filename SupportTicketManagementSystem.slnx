@@ -5,4 +5,7 @@
     <Project Path="src/SupportTicketManagementSystem.Domain/SupportTicketManagementSystem.Domain.csproj" />
     <Project Path="src/SupportTicketManagementSystem.Infrastructure/SupportTicketManagementSystem.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SupportTicketManagementSystem.IntegrationTests/SupportTicketManagementSystem.IntegrationTests.csproj" />
+  </Folder>
 </Solution>
