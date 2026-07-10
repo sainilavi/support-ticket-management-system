@@ -7,8 +7,6 @@ namespace SupportTicketManagementSystem.Infrastructure.Configurations;
 
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
-    private static readonly DateTime SeedCreatedAt = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.ToTable("Users");
@@ -56,37 +54,5 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasData(
-            new User
-            {
-                Id = 1,
-                FirstName = "System",
-                LastName = "Admin",
-                Email = "admin@support.com",
-                Role = UserRole.Admin,
-                IsActive = true,
-                CreatedAt = SeedCreatedAt
-            },
-            new User
-            {
-                Id = 2,
-                FirstName = "Support",
-                LastName = "Agent",
-                Email = "agent@support.com",
-                Role = UserRole.Agent,
-                IsActive = true,
-                CreatedAt = SeedCreatedAt
-            },
-            new User
-            {
-                Id = 3,
-                FirstName = "John",
-                LastName = "Customer",
-                Email = "customer@support.com",
-                Role = UserRole.Customer,
-                IsActive = true,
-                CreatedAt = SeedCreatedAt
-            });
     }
 }

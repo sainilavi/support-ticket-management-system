@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SupportTicketManagementSystem.API.Extensions;
 using SupportTicketManagementSystem.Application.DependencyInjection;
 using SupportTicketManagementSystem.Infrastructure.Data;
+using SupportTicketManagementSystem.Infrastructure.Data.Seed;
 using SupportTicketManagementSystem.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,12 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     if (app.Environment.IsDevelopment())
     {
-        dbContext.Database.Migrate();
+        await dbContext.Database.MigrateAsync();
+    }
+
+    if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+    {
+        await ApplicationDbSeeder.SeedAsync(dbContext);
     }
 }
 

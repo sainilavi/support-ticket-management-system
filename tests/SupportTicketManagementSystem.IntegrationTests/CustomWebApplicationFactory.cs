@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using SupportTicketManagementSystem.Infrastructure.Data;
+using SupportTicketManagementSystem.Infrastructure.Data.Seed;
 
 namespace SupportTicketManagementSystem.IntegrationTests;
 
@@ -33,6 +34,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         using var scope = host.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         dbContext.Database.EnsureCreated();
+        ApplicationDbSeeder.SeedAsync(dbContext).GetAwaiter().GetResult();
 
         return host;
     }
