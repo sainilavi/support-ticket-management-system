@@ -17,11 +17,14 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<TicketDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<TicketDto>>>> GetAll(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<TicketDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<PagedResult<TicketDto>>>> Search(
+        [FromQuery] TicketQueryDto query,
+        CancellationToken cancellationToken)
     {
-        var tickets = await _ticketService.GetAllAsync(cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<TicketDto>>.Ok(tickets));
+        var result = await _ticketService.SearchAsync(query, cancellationToken);
+        return Ok(ApiResponse<PagedResult<TicketDto>>.Ok(result));
     }
 
     [HttpGet("{id:int}")]

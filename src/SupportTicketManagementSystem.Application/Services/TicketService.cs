@@ -1,6 +1,7 @@
 using AutoMapper;
 using FluentValidation;
 using SupportTicketManagementSystem.Application.Common.Extensions;
+using SupportTicketManagementSystem.Application.Common.Models;
 using SupportTicketManagementSystem.Application.DTOs.Tickets;
 using SupportTicketManagementSystem.Application.Exceptions;
 using SupportTicketManagementSystem.Application.Interfaces.Repositories;
@@ -17,25 +18,46 @@ public class TicketService : ITicketService
     private readonly IMapper _mapper;
     private readonly IValidator<CreateTicketDto> _createValidator;
     private readonly IValidator<UpdateTicketDto> _updateValidator;
+    private readonly IValidator<TicketQueryDto> _queryValidator;
 
     public TicketService(
         ITicketRepository ticketRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IValidator<CreateTicketDto> createValidator,
-        IValidator<UpdateTicketDto> updateValidator)
+        IValidator<UpdateTicketDto> updateValidator,
+        IValidator<TicketQueryDto> queryValidator)
     {
         _ticketRepository = ticketRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _queryValidator = queryValidator;
     }
 
-    public async Task<IReadOnlyList<TicketDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<TicketDto>> SearchAsync(
+        TicketQueryDto query,
+        CancellationToken cancellationToken = default)
     {
-        var tickets = await _ticketRepository.GetAllWithUsersAsync(cancellationToken);
-        return _mapper.Map<IReadOnlyList<TicketDto>>(tickets);
+        await _queryValidator.ValidateDtoAsync(query, cancellationToken);
+
+        var filter = new TicketSearchFilter
+        {
+            Keyword = query.Keyword,
+            Status = query.Status,
+            PageNumber = query.PageNumber,
+            PageSize = query.PageSize
+        };
+
+        var (tickets, totalCount) = await _ticketRepository.SearchAsync(filter, cancellationToken);
+        var ticketDtos = _mapper.Map<IReadOnlyList<TicketDto>>(tickets);
+
+        return PagedResult<TicketDto>.Create(
+            ticketDtos,
+            totalCount,
+            query.PageNumber,
+            query.PageSize);
     }
 
     public async Task<TicketDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
