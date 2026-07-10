@@ -1,13 +1,16 @@
-using System.Net;
 using System.Text.Json;
 using SupportTicketManagementSystem.API.Models;
-using SupportTicketManagementSystem.Application.Exceptions;
-using SupportTicketManagementSystem.Domain.Exceptions;
 
 namespace SupportTicketManagementSystem.API.Middleware;
 
 public class GlobalExceptionMiddleware
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
+
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionMiddleware> _logger;
     private readonly IHostEnvironment _environment;
@@ -28,62 +31,68 @@ public class GlobalExceptionMiddleware
         {
             await _next(context);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
-            await HandleExceptionAsync(context, ex);
+            await HandleExceptionAsync(context, exception);
         }
     }
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        var (statusCode, message, errors) = MapException(exception);
+        var mapping = ExceptionMapper.Map(exception, _environment.IsDevelopment());
 
-        var response = new ErrorResponse
-        {
-            StatusCode = (int)statusCode,
-            Message = message,
-            Errors = errors,
-            TraceId = context.TraceIdentifier
-        };
+        LogException(context, exception, mapping);
 
-        if (!_environment.IsDevelopment() && statusCode == HttpStatusCode.InternalServerError)
+        if (context.Response.HasStarted)
         {
-            response.Message = "An unexpected error occurred.";
+            _logger.LogWarning(
+                "The response has already started; unable to write error response. TraceId: {TraceId}",
+                context.TraceIdentifier);
+            throw exception;
         }
 
-        context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)statusCode;
-
-        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        var response = new ApiErrorResponse
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+            StatusCode = (int)mapping.StatusCode,
+            Message = mapping.Message,
+            Errors = mapping.Errors,
+            TraceId = context.TraceIdentifier,
+            Details = mapping.Details
+        };
 
-        await context.Response.WriteAsync(json);
+        context.Response.Clear();
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = (int)mapping.StatusCode;
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
     }
 
-    private static (HttpStatusCode StatusCode, string Message, IDictionary<string, string[]>? Errors) MapException(
-        Exception exception)
+    private void LogException(HttpContext context, Exception exception, ExceptionMappingResult mapping)
     {
-        return exception switch
+        var method = context.Request.Method;
+        var path = context.Request.Path.Value ?? string.Empty;
+        var traceId = context.TraceIdentifier;
+
+        if (mapping.LogLevel == LogLevel.Error)
         {
-            ValidationException validationException => (
-                HttpStatusCode.BadRequest,
-                validationException.Message,
-                validationException.Errors),
-            NotFoundException notFoundException => (
-                HttpStatusCode.NotFound,
-                notFoundException.Message,
-                null),
-            DomainException domainException => (
-                HttpStatusCode.BadRequest,
-                domainException.Message,
-                null),
-            _ => (
-                HttpStatusCode.InternalServerError,
-                exception.Message,
-                null)
-        };
+            _logger.LogError(
+                exception,
+                "Unhandled exception {ExceptionType} returned {StatusCode} for {Method} {Path}. TraceId: {TraceId}",
+                exception.GetType().Name,
+                (int)mapping.StatusCode,
+                method,
+                path,
+                traceId);
+            return;
+        }
+
+        _logger.LogWarning(
+            exception,
+            "Handled exception {ExceptionType} returned {StatusCode} for {Method} {Path}. TraceId: {TraceId}",
+            exception.GetType().Name,
+            (int)mapping.StatusCode,
+            method,
+            path,
+            traceId);
     }
 }

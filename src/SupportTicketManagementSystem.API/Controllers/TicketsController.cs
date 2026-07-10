@@ -18,7 +18,7 @@ public class TicketsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<TicketDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PagedResult<TicketDto>>>> Search(
         [FromQuery] TicketQueryDto query,
         CancellationToken cancellationToken)
@@ -29,7 +29,7 @@ public class TicketsController : ControllerBase
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ApiResponse<TicketDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<TicketDto>>> GetById(int id, CancellationToken cancellationToken)
     {
         var ticket = await _ticketService.GetByIdAsync(id, cancellationToken);
@@ -38,7 +38,7 @@ public class TicketsController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<TicketDto>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<TicketDto>>> Create(
         [FromBody] CreateTicketDto dto,
         CancellationToken cancellationToken)
@@ -52,8 +52,8 @@ public class TicketsController : ControllerBase
 
     [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(ApiResponse<TicketDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<TicketDto>>> Update(
         int id,
         [FromBody] UpdateTicketDto dto,
@@ -65,7 +65,7 @@ public class TicketsController : ControllerBase
 
     [HttpDelete("{id:int}")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> Delete(int id, CancellationToken cancellationToken)
     {
         await _ticketService.DeleteAsync(id, cancellationToken);

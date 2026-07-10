@@ -18,7 +18,7 @@ public class CommentsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<CommentDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<CommentDto>>>> GetByTicketId(
         int ticketId,
         CancellationToken cancellationToken)
@@ -29,8 +29,8 @@ public class CommentsController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<CommentDto>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(Models.ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<CommentDto>>> Create(
         int ticketId,
         [FromBody] CreateCommentDto dto,
