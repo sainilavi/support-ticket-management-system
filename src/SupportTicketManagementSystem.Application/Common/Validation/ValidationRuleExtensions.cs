@@ -30,9 +30,11 @@ public static class ValidationRuleExtensions
         this IRuleBuilder<T, int?> ruleBuilder,
         IUserRepository userRepository) =>
         ruleBuilder
+            .Must(assignedToUserId => !assignedToUserId.HasValue || assignedToUserId.Value > 0)
+            .WithMessage(ValidationMessages.GreaterThanZero("AssignedToUserId"))
             .MustAsync(async (assignedToUserId, cancellation) =>
             {
-                if (!assignedToUserId.HasValue)
+                if (!assignedToUserId.HasValue || assignedToUserId.Value <= 0)
                 {
                     return true;
                 }
@@ -44,12 +46,8 @@ public static class ValidationRuleExtensions
             })
             .WithMessage(ValidationMessages.AssignedUserInvalidRole);
 
-    public static IRuleBuilderOptions<T, int> ValidTicketId<T>(
-        this IRuleBuilder<T, int> ruleBuilder,
-        ITicketRepository ticketRepository) =>
+    public static IRuleBuilderOptions<T, int> ValidTicketId<T>(this IRuleBuilder<T, int> ruleBuilder) =>
         ruleBuilder
-            .GreaterThan(0).WithMessage(ValidationMessages.GreaterThanZero("TicketId"))
-            .MustAsync(async (ticketId, cancellation) =>
-                await ticketRepository.ExistsAsync(ticketId, cancellation))
-            .WithMessage(ValidationMessages.TicketNotFound);
+            .GreaterThan(0)
+            .WithMessage(ValidationMessages.GreaterThanZero("TicketId"));
 }

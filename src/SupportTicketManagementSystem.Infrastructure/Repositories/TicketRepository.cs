@@ -18,6 +18,8 @@ public class TicketRepository : Repository<Ticket>, ITicketRepository
         TicketQueryDto query,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         var ticketsQuery = _context.Tickets
             .AsNoTracking()
             .Include(t => t.CreatedBy)

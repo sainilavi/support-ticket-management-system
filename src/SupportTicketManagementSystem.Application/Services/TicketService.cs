@@ -39,6 +39,8 @@ public class TicketService : ITicketService
         TicketQueryDto query,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         await _queryValidator.ValidateDtoAsync(query, cancellationToken);
 
         var (tickets, totalCount) = await _ticketRepository.SearchAsync(query, cancellationToken);

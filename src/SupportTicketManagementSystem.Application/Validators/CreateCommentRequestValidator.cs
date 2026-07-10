@@ -12,8 +12,6 @@ public class CreateCommentRequestValidator : AbstractValidator<CreateCommentRequ
         ITicketRepository ticketRepository,
         IValidator<CreateCommentDto> createCommentDtoValidator)
     {
-        RuleFor(x => x.TicketId).ValidTicketId(ticketRepository);
-
         RuleFor(x => x.Dto)
             .NotNull()
             .WithMessage(ValidationMessages.Required("Request body"))
@@ -23,6 +21,12 @@ public class CreateCommentRequestValidator : AbstractValidator<CreateCommentRequ
             .MustAsync(async (request, cancellation) =>
             {
                 var status = await ticketRepository.GetStatusAsync(request.TicketId, cancellation);
+
+                if (status is null)
+                {
+                    return false;
+                }
+
                 return status is not (TicketStatus.Closed or TicketStatus.Cancelled);
             })
             .WithMessage("Comments cannot be added to closed or cancelled tickets.")

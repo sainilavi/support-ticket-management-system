@@ -12,6 +12,7 @@ namespace SupportTicketManagementSystem.Application.Services;
 public class CommentService : ICommentService
 {
     private readonly ICommentRepository _commentRepository;
+    private readonly ITicketRepository _ticketRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IValidator<CreateCommentRequest> _createRequestValidator;
@@ -19,12 +20,14 @@ public class CommentService : ICommentService
 
     public CommentService(
         ICommentRepository commentRepository,
+        ITicketRepository ticketRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IValidator<CreateCommentRequest> createRequestValidator,
         IValidator<GetCommentsByTicketRequest> getByTicketRequestValidator)
     {
         _commentRepository = commentRepository;
+        _ticketRepository = ticketRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _createRequestValidator = createRequestValidator;
@@ -37,6 +40,7 @@ public class CommentService : ICommentService
     {
         var request = new GetCommentsByTicketRequest { TicketId = ticketId };
         await _getByTicketRequestValidator.ValidateDtoAsync(request, cancellationToken);
+        await EnsureTicketExistsAsync(ticketId, cancellationToken);
 
         var comments = await _commentRepository.GetByTicketIdWithUserAsync(ticketId, cancellationToken);
         return _mapper.Map<IReadOnlyList<CommentDto>>(comments);
@@ -47,6 +51,10 @@ public class CommentService : ICommentService
         CreateCommentDto dto,
         CancellationToken cancellationToken = default)
     {
+        var formatRequest = new GetCommentsByTicketRequest { TicketId = ticketId };
+        await _getByTicketRequestValidator.ValidateDtoAsync(formatRequest, cancellationToken);
+        await EnsureTicketExistsAsync(ticketId, cancellationToken);
+
         var request = new CreateCommentRequest
         {
             TicketId = ticketId,
@@ -63,5 +71,13 @@ public class CommentService : ICommentService
         await _commentRepository.LoadUserAsync(comment, cancellationToken);
 
         return _mapper.Map<CommentDto>(comment);
+    }
+
+    private async Task EnsureTicketExistsAsync(int ticketId, CancellationToken cancellationToken)
+    {
+        if (!await _ticketRepository.ExistsAsync(ticketId, cancellationToken))
+        {
+            throw new NotFoundException(nameof(Ticket), ticketId);
+        }
     }
 }

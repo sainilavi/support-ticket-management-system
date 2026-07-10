@@ -4,6 +4,6 @@ namespace SupportTicketManagementSystem.Application.Common;
 
 public static class UserDisplayNameFormatter
 {
-    public static string Format(User user) =>
-        $"{user.FirstName} {user.LastName}".Trim();
+    public static string Format(User? user) =>
+        user is null ? string.Empty : $"{user.FirstName} {user.LastName}".Trim();
 }

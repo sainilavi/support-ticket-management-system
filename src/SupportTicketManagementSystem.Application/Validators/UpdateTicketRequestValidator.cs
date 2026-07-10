@@ -19,7 +19,8 @@ public class UpdateTicketRequestValidator : AbstractValidator<UpdateTicketReques
             .SetValidator(updateTicketDtoValidator);
 
         RuleFor(x => x)
-            .Must(request => TicketStatusWorkflow.CanTransition(request.CurrentStatus, request.Dto.Status))
+            .Must(request => TicketStatusWorkflow.CanTransition(request.CurrentStatus, request.Dto!.Status))
+            .When(x => x.Dto is not null)
             .WithMessage(request =>
             {
                 var allowedTransitions = TicketStatusWorkflow.GetAllowedTransitions(request.CurrentStatus);
@@ -27,8 +28,9 @@ public class UpdateTicketRequestValidator : AbstractValidator<UpdateTicketReques
                     ? "none (terminal status)"
                     : string.Join(", ", allowedTransitions);
 
-                return $"Cannot transition from '{request.CurrentStatus}' to '{request.Dto.Status}'. Allowed transitions: {allowedMessage}.";
+                return $"Cannot transition from '{request.CurrentStatus}' to '{request.Dto!.Status}'. Allowed transitions: {allowedMessage}.";
             })
+            .When(x => x.Dto is not null)
             .OverridePropertyName(nameof(UpdateTicketDto.Status));
     }
 }

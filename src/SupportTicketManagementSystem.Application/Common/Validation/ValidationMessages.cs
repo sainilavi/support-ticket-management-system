@@ -13,6 +13,9 @@ public static class ValidationMessages
     public static string GreaterThanZero(string fieldName) =>
         $"{fieldName} must be greater than 0.";
 
+    public static string MaxValue(string fieldName, int maxValue) =>
+        $"{fieldName} must not exceed {maxValue}.";
+
     public static string InvalidEnum(string fieldName) =>
         $"{fieldName} must be a valid value.";
 

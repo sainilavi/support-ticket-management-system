@@ -9,7 +9,8 @@ public class TicketQueryDtoValidator : AbstractValidator<TicketQueryDto>
     public TicketQueryDtoValidator()
     {
         RuleFor(x => x.PageNumber)
-            .GreaterThanOrEqualTo(ValidationConstants.MinPageNumber);
+            .InclusiveBetween(ValidationConstants.MinPageNumber, ValidationConstants.MaxPageNumber)
+            .WithMessage(ValidationMessages.MaxValue("PageNumber", ValidationConstants.MaxPageNumber));
 
         RuleFor(x => x.PageSize)
             .InclusiveBetween(ValidationConstants.MinPageSize, ValidationConstants.MaxPageSize);

@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.EntityFrameworkCore;
 using SupportTicketManagementSystem.Application.Exceptions;
 using SupportTicketManagementSystem.Domain.Exceptions;
 
@@ -8,6 +9,9 @@ public static class ExceptionMapper
 {
     private const string InternalServerErrorMessage = "An unexpected error occurred.";
     private const string UnauthorizedMessage = "Unauthorized access.";
+    private const string MissingValueMessage = "A required value was missing.";
+    private const string DataConflictMessage =
+        "The request could not be completed because related data was modified or removed.";
 
     public static ExceptionMappingResult Map(Exception exception, bool isDevelopment)
     {
@@ -37,6 +41,12 @@ public static class ExceptionMapper
                 argumentNullException.Message,
                 null),
 
+            NullReferenceException => new ExceptionMappingResult(
+                HttpStatusCode.BadRequest,
+                LogLevel.Warning,
+                MissingValueMessage,
+                null),
+
             ArgumentException argumentException => new ExceptionMappingResult(
                 HttpStatusCode.BadRequest,
                 LogLevel.Warning,
@@ -59,6 +69,18 @@ public static class ExceptionMapper
                 HttpStatusCode.BadRequest,
                 LogLevel.Warning,
                 invalidOperationException.Message,
+                null),
+
+            DbUpdateConcurrencyException => new ExceptionMappingResult(
+                HttpStatusCode.Conflict,
+                LogLevel.Warning,
+                DataConflictMessage,
+                null),
+
+            DbUpdateException => new ExceptionMappingResult(
+                HttpStatusCode.Conflict,
+                LogLevel.Warning,
+                DataConflictMessage,
                 null),
 
             _ => new ExceptionMappingResult(

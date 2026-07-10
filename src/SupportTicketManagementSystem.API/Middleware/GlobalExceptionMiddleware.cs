@@ -31,6 +31,14 @@ public class GlobalExceptionMiddleware
         {
             await _next(context);
         }
+        catch (Exception exception) when (IsClientCancellation(context, exception))
+        {
+            _logger.LogDebug(
+                "Request was cancelled for {Method} {Path}. TraceId: {TraceId}",
+                context.Request.Method,
+                context.Request.Path.Value ?? string.Empty,
+                context.TraceIdentifier);
+        }
         catch (Exception exception)
         {
             await HandleExceptionAsync(context, exception);
@@ -66,6 +74,9 @@ public class GlobalExceptionMiddleware
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
     }
+
+    private static bool IsClientCancellation(HttpContext context, Exception exception) =>
+        exception is OperationCanceledException && context.RequestAborted.IsCancellationRequested;
 
     private void LogException(HttpContext context, Exception exception, ExceptionMappingResult mapping)
     {

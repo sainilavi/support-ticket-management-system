@@ -108,14 +108,14 @@ public class TicketsController : ControllerBase
     /// <param name="id">Ticket identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Deletion confirmation.</returns>
-    /// <response code="200">Ticket deleted successfully.</response>
+    /// <response code="204">Ticket deleted successfully.</response>
     /// <response code="404">Ticket was not found.</response>
     [HttpDelete("{id:int}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Delete(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await _ticketService.DeleteAsync(id, cancellationToken);
-        return Ok(ApiResponse<object>.Ok(new object(), "Ticket deleted successfully."));
+        return NoContent();
     }
 }
