@@ -1,4 +1,5 @@
 using AutoMapper;
+using SupportTicketManagementSystem.Application.Common;
 using SupportTicketManagementSystem.Application.DTOs.Tickets;
 using SupportTicketManagementSystem.Domain.Entities;
 using SupportTicketManagementSystem.Domain.Enums;
@@ -10,9 +11,9 @@ public class TicketProfile : Profile
     public TicketProfile()
     {
         CreateMap<Ticket, TicketDto>()
-            .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => FormatUserName(src.CreatedBy)))
+            .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => UserDisplayNameFormatter.Format(src.CreatedBy)))
             .ForMember(dest => dest.AssignedToName, opt => opt.MapFrom(src =>
-                src.AssignedTo != null ? FormatUserName(src.AssignedTo) : null));
+                src.AssignedTo != null ? UserDisplayNameFormatter.Format(src.AssignedTo) : null));
 
         CreateMap<CreateTicketDto, Ticket>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(_ => TicketStatus.Open));
@@ -26,7 +27,4 @@ public class TicketProfile : Profile
             .ForMember(dest => dest.AssignedTo, opt => opt.Ignore())
             .ForMember(dest => dest.Comments, opt => opt.Ignore());
     }
-
-    private static string FormatUserName(User user) =>
-        $"{user.FirstName} {user.LastName}".Trim();
 }

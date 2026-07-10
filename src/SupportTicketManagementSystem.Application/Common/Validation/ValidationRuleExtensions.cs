@@ -39,9 +39,8 @@ public static class ValidationRuleExtensions
 
                 return await userRepository.ExistsActiveWithAnyRoleAsync(
                     assignedToUserId.Value,
-                    cancellation,
-                    UserRole.Agent,
-                    UserRole.Admin);
+                    [UserRole.Agent, UserRole.Admin],
+                    cancellation);
             })
             .WithMessage(ValidationMessages.AssignedUserInvalidRole);
 

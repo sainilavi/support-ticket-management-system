@@ -1,4 +1,4 @@
-using SupportTicketManagementSystem.Application.DTOs.Tickets;
+using SupportTicketManagementSystem.Domain.Enums;
 
 namespace SupportTicketManagementSystem.Application.DTOs.Tickets;
 
@@ -6,4 +6,5 @@ public class UpdateTicketRequest
 {
     public int TicketId { get; set; }
     public UpdateTicketDto Dto { get; set; } = new();
+    public TicketStatus CurrentStatus { get; set; }
 }

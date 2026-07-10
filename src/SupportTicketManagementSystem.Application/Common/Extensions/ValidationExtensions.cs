@@ -1,8 +1,7 @@
-using System.Text.Json;
 using FluentValidation;
 using FluentValidation.Results;
 using AppValidationException = SupportTicketManagementSystem.Application.Exceptions.ValidationException;
-using SupportTicketManagementSystem.Application.Common.Validation;
+using SupportTicketManagementSystem.Application.Common;
 
 namespace SupportTicketManagementSystem.Application.Common.Extensions;
 
@@ -30,7 +29,7 @@ public static class ValidationExtensions
 
     private static string NormalizePropertyName(string propertyName)
     {
-        var camelCaseName = ToCamelCase(propertyName);
+        var camelCaseName = JsonPropertyNameNormalizer.ToCamelCase(propertyName);
 
         if (camelCaseName.StartsWith("dto.", StringComparison.Ordinal))
         {
@@ -38,20 +37,5 @@ public static class ValidationExtensions
         }
 
         return camelCaseName;
-    }
-
-    private static string ToCamelCase(string propertyName)
-    {
-        if (string.IsNullOrEmpty(propertyName))
-        {
-            return propertyName;
-        }
-
-        if (propertyName.Contains('.'))
-        {
-            return string.Join('.', propertyName.Split('.').Select(ToCamelCase));
-        }
-
-        return JsonNamingPolicy.CamelCase.ConvertName(propertyName);
     }
 }

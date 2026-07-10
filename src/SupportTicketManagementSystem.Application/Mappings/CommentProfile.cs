@@ -1,4 +1,5 @@
 using AutoMapper;
+using SupportTicketManagementSystem.Application.Common;
 using SupportTicketManagementSystem.Application.DTOs.Comments;
 using SupportTicketManagementSystem.Domain.Entities;
 
@@ -9,7 +10,7 @@ public class CommentProfile : Profile
     public CommentProfile()
     {
         CreateMap<Comment, CommentDto>()
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => FormatUserName(src.User)));
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => UserDisplayNameFormatter.Format(src.User)));
 
         CreateMap<CreateCommentDto, Comment>()
             .ForMember(dest => dest.TicketId, opt => opt.Ignore())
@@ -19,7 +20,4 @@ public class CommentProfile : Profile
             .ForMember(dest => dest.Ticket, opt => opt.Ignore())
             .ForMember(dest => dest.User, opt => opt.Ignore());
     }
-
-    private static string FormatUserName(User user) =>
-        $"{user.FirstName} {user.LastName}".Trim();
 }

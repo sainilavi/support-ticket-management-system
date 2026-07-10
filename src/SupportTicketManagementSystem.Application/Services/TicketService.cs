@@ -41,15 +41,7 @@ public class TicketService : ITicketService
     {
         await _queryValidator.ValidateDtoAsync(query, cancellationToken);
 
-        var filter = new TicketSearchFilter
-        {
-            Keyword = query.Keyword,
-            Status = query.Status,
-            PageNumber = query.PageNumber,
-            PageSize = query.PageSize
-        };
-
-        var (tickets, totalCount) = await _ticketRepository.SearchAsync(filter, cancellationToken);
+        var (tickets, totalCount) = await _ticketRepository.SearchAsync(query, cancellationToken);
         var ticketDtos = _mapper.Map<IReadOnlyList<TicketDto>>(tickets);
 
         return PagedResult<TicketDto>.Create(
@@ -74,34 +66,30 @@ public class TicketService : ITicketService
         var ticket = _mapper.Map<Ticket>(dto);
         await _ticketRepository.AddAsync(ticket, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _ticketRepository.LoadUsersAsync(ticket, cancellationToken);
 
-        var createdTicket = await _ticketRepository.GetByIdWithUsersAsync(ticket.Id, cancellationToken)
-            ?? throw new NotFoundException(nameof(Ticket), ticket.Id);
-
-        return _mapper.Map<TicketDto>(createdTicket);
+        return _mapper.Map<TicketDto>(ticket);
     }
 
     public async Task<TicketDto> UpdateAsync(int id, UpdateTicketDto dto, CancellationToken cancellationToken = default)
     {
+        var ticket = await _ticketRepository.GetByIdForUpdateAsync(id, cancellationToken)
+            ?? throw new NotFoundException(nameof(Ticket), id);
+
         var request = new UpdateTicketRequest
         {
             TicketId = id,
-            Dto = dto
+            Dto = dto,
+            CurrentStatus = ticket.Status
         };
 
         await _updateRequestValidator.ValidateDtoAsync(request, cancellationToken);
 
-        var ticket = await _ticketRepository.GetByIdForUpdateAsync(id, cancellationToken)
-            ?? throw new NotFoundException(nameof(Ticket), id);
-
         _mapper.Map(dto, ticket);
-        await _ticketRepository.UpdateAsync(ticket, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _ticketRepository.LoadUsersAsync(ticket, cancellationToken);
 
-        var updatedTicket = await _ticketRepository.GetByIdWithUsersAsync(id, cancellationToken)
-            ?? throw new NotFoundException(nameof(Ticket), id);
-
-        return _mapper.Map<TicketDto>(updatedTicket);
+        return _mapper.Map<TicketDto>(ticket);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)

@@ -17,7 +17,6 @@ public static class ValidationMessages
         $"{fieldName} must be a valid value.";
 
     public const string TicketNotFound = "Ticket does not exist.";
-    public const string AssignedUserNotFound = "Assigned user does not exist or is not active.";
     public const string AssignedUserInvalidRole = "Assigned user must be an active agent or admin.";
     public const string CreatedByUserInvalid = "Created by user must be an active customer.";
     public const string CommentUserInvalid = "User does not exist or is not active.";

@@ -60,10 +60,8 @@ public class CommentService : ICommentService
 
         await _commentRepository.AddAsync(comment, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _commentRepository.LoadUserAsync(comment, cancellationToken);
 
-        var createdComment = await _commentRepository.GetByIdWithUserAsync(comment.Id, cancellationToken)
-            ?? throw new NotFoundException(nameof(Comment), comment.Id);
-
-        return _mapper.Map<CommentDto>(createdComment);
+        return _mapper.Map<CommentDto>(comment);
     }
 }

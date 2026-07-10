@@ -3,7 +3,7 @@ using SupportTicketManagementSystem.Application.DTOs.Tickets;
 
 namespace SupportTicketManagementSystem.Application.Interfaces.Services;
 
-public interface ITicketService : IService
+public interface ITicketService
 {
     Task<PagedResult<TicketDto>> SearchAsync(TicketQueryDto query, CancellationToken cancellationToken = default);
     Task<TicketDto> GetByIdAsync(int id, CancellationToken cancellationToken = default);

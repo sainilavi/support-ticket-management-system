@@ -1,17 +1,16 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using SupportTicketManagementSystem.Application.Interfaces.Repositories;
 using SupportTicketManagementSystem.Domain.Common;
 using SupportTicketManagementSystem.Infrastructure.Data;
 
 namespace SupportTicketManagementSystem.Infrastructure.Repositories;
 
-public class Repository<T> : IRepository<T> where T : BaseEntity
+public abstract class Repository<T> where T : BaseEntity
 {
     protected readonly ApplicationDbContext _context;
     protected readonly DbSet<T> _dbSet;
 
-    public Repository(ApplicationDbContext context)
+    protected Repository(ApplicationDbContext context)
     {
         _context = context;
         _dbSet = context.Set<T>();
@@ -32,12 +31,6 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     {
         await _dbSet.AddAsync(entity, cancellationToken);
         return entity;
-    }
-
-    public virtual Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
-    {
-        _dbSet.Update(entity);
-        return Task.CompletedTask;
     }
 
     public virtual Task DeleteAsync(T entity, CancellationToken cancellationToken = default)

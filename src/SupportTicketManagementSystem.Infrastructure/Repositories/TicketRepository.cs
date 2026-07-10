@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SupportTicketManagementSystem.Application.Common.Models;
+using SupportTicketManagementSystem.Application.DTOs.Tickets;
 using SupportTicketManagementSystem.Application.Interfaces.Repositories;
 using SupportTicketManagementSystem.Domain.Entities;
 using SupportTicketManagementSystem.Domain.Enums;
@@ -7,44 +7,42 @@ using SupportTicketManagementSystem.Infrastructure.Data;
 
 namespace SupportTicketManagementSystem.Infrastructure.Repositories;
 
-public class TicketRepository : ITicketRepository
+public class TicketRepository : Repository<Ticket>, ITicketRepository
 {
-    private readonly ApplicationDbContext _context;
-
     public TicketRepository(ApplicationDbContext context)
+        : base(context)
     {
-        _context = context;
     }
 
     public async Task<(IReadOnlyList<Ticket> Items, int TotalCount)> SearchAsync(
-        TicketSearchFilter filter,
+        TicketQueryDto query,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.Tickets
+        var ticketsQuery = _context.Tickets
             .AsNoTracking()
             .Include(t => t.CreatedBy)
             .Include(t => t.AssignedTo)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(filter.Keyword))
+        if (!string.IsNullOrWhiteSpace(query.Keyword))
         {
-            var keyword = filter.Keyword.Trim();
-            query = query.Where(t =>
+            var keyword = query.Keyword.Trim();
+            ticketsQuery = ticketsQuery.Where(t =>
                 t.Title.Contains(keyword) ||
                 t.Description.Contains(keyword));
         }
 
-        if (filter.Status.HasValue)
+        if (query.Status.HasValue)
         {
-            query = query.Where(t => t.Status == filter.Status.Value);
+            ticketsQuery = ticketsQuery.Where(t => t.Status == query.Status.Value);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await ticketsQuery.CountAsync(cancellationToken);
 
-        var items = await query
+        var items = await ticketsQuery
             .OrderByDescending(t => t.CreatedAt)
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize)
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
         return (items, totalCount);
@@ -61,35 +59,20 @@ public class TicketRepository : ITicketRepository
         await _context.Tickets
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
-    public async Task<Ticket> AddAsync(Ticket ticket, CancellationToken cancellationToken = default)
+    public async Task LoadUsersAsync(Ticket ticket, CancellationToken cancellationToken = default)
     {
-        await _context.Tickets.AddAsync(ticket, cancellationToken);
-        return ticket;
+        await _context.Entry(ticket).Reference(t => t.CreatedBy).LoadAsync(cancellationToken);
+
+        if (ticket.AssignedToUserId.HasValue)
+        {
+            await _context.Entry(ticket).Reference(t => t.AssignedTo).LoadAsync(cancellationToken);
+        }
     }
 
-    public Task UpdateAsync(Ticket ticket, CancellationToken cancellationToken = default)
-    {
-        _context.Tickets.Update(ticket);
-        return Task.CompletedTask;
-    }
-
-    public Task DeleteAsync(Ticket ticket, CancellationToken cancellationToken = default)
-    {
-        _context.Tickets.Remove(ticket);
-        return Task.CompletedTask;
-    }
-
-    public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default) =>
-        await _context.Tickets.AnyAsync(t => t.Id == id, cancellationToken);
-
-    public async Task<TicketStatus?> GetStatusAsync(int id, CancellationToken cancellationToken = default)
-    {
-        var status = await _context.Tickets
+    public async Task<TicketStatus?> GetStatusAsync(int id, CancellationToken cancellationToken = default) =>
+        await _context.Tickets
             .AsNoTracking()
             .Where(t => t.Id == id)
             .Select(t => (TicketStatus?)t.Status)
             .FirstOrDefaultAsync(cancellationToken);
-
-        return status;
-    }
 }
