@@ -7,23 +7,13 @@ using SupportTicketManagementSystem.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Connection string is read from appsettings.json / appsettings.Development.json
-// via builder.Configuration and registered in AddInfrastructure().
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new()
-    {
-        Title = "Support Ticket Management System API",
-        Version = "v1",
-        Description = "ASP.NET Core 8 Web API for managing support tickets."
-    });
-});
+builder.Services.AddSwaggerDocumentation();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -43,11 +33,7 @@ app.UseGlobalExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Support Ticket Management System API v1");
-    });
+    app.UseSwaggerDocumentation();
 }
 
 app.UseHttpsRedirection();
