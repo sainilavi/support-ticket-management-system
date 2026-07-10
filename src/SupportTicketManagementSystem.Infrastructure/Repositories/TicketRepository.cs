@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SupportTicketManagementSystem.Application.Common.Models;
 using SupportTicketManagementSystem.Application.Interfaces.Repositories;
 using SupportTicketManagementSystem.Domain.Entities;
+using SupportTicketManagementSystem.Domain.Enums;
 using SupportTicketManagementSystem.Infrastructure.Data;
 
 namespace SupportTicketManagementSystem.Infrastructure.Repositories;
@@ -80,4 +81,15 @@ public class TicketRepository : ITicketRepository
 
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default) =>
         await _context.Tickets.AnyAsync(t => t.Id == id, cancellationToken);
+
+    public async Task<TicketStatus?> GetStatusAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var status = await _context.Tickets
+            .AsNoTracking()
+            .Where(t => t.Id == id)
+            .Select(t => (TicketStatus?)t.Status)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return status;
+    }
 }

@@ -1,4 +1,5 @@
 using FluentValidation;
+using SupportTicketManagementSystem.Application.Common.Validation;
 using SupportTicketManagementSystem.Application.DTOs.Tickets;
 
 namespace SupportTicketManagementSystem.Application.Validators;
@@ -8,17 +9,19 @@ public class TicketQueryDtoValidator : AbstractValidator<TicketQueryDto>
     public TicketQueryDtoValidator()
     {
         RuleFor(x => x.PageNumber)
-            .GreaterThanOrEqualTo(1);
+            .GreaterThanOrEqualTo(ValidationConstants.MinPageNumber);
 
         RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100);
+            .InclusiveBetween(ValidationConstants.MinPageSize, ValidationConstants.MaxPageSize);
 
         RuleFor(x => x.Status)
             .IsInEnum()
+            .WithMessage(ValidationMessages.InvalidEnum("Status"))
             .When(x => x.Status.HasValue);
 
         RuleFor(x => x.Keyword)
-            .MaximumLength(200)
+            .MaximumLength(ValidationConstants.KeywordMaxLength)
+            .WithMessage(ValidationMessages.MaxLength("Keyword", ValidationConstants.KeywordMaxLength))
             .When(x => !string.IsNullOrWhiteSpace(x.Keyword));
     }
 }

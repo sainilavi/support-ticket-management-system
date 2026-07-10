@@ -1,4 +1,5 @@
 using FluentValidation;
+using SupportTicketManagementSystem.Application.Common.Validation;
 using SupportTicketManagementSystem.Application.DTOs.Comments;
 using SupportTicketManagementSystem.Application.Interfaces.Repositories;
 
@@ -9,13 +10,14 @@ public class CreateCommentDtoValidator : AbstractValidator<CreateCommentDto>
     public CreateCommentDtoValidator(IUserRepository userRepository)
     {
         RuleFor(x => x.Content)
-            .NotEmpty()
-            .MaximumLength(2000);
+            .NotEmpty().WithMessage(ValidationMessages.Required("Content"))
+            .MaximumLength(ValidationConstants.CommentContentMaxLength)
+            .WithMessage(ValidationMessages.MaxLength("Content", ValidationConstants.CommentContentMaxLength));
 
         RuleFor(x => x.UserId)
-            .GreaterThan(0)
+            .GreaterThan(0).WithMessage(ValidationMessages.GreaterThanZero("UserId"))
             .MustAsync(async (userId, cancellation) =>
                 await userRepository.ExistsActiveAsync(userId, cancellation))
-            .WithMessage("UserId must reference an active user.");
+            .WithMessage(ValidationMessages.CommentUserInvalid);
     }
 }

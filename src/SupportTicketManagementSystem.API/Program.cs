@@ -1,10 +1,14 @@
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using SupportTicketManagementSystem.API.Extensions;
 using SupportTicketManagementSystem.Application.DependencyInjection;
+using SupportTicketManagementSystem.Infrastructure.Data;
 using SupportTicketManagementSystem.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Connection string is read from appsettings.json / appsettings.Development.json
+// via builder.Configuration and registered in AddInfrastructure().
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -25,6 +29,15 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    if (app.Environment.IsDevelopment())
+    {
+        dbContext.Database.Migrate();
+    }
+}
 
 app.UseGlobalExceptionHandler();
 

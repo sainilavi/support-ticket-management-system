@@ -11,7 +11,12 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddAutoMapper(typeof(DependencyInjection).Assembly);
+
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+
+        ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
+        ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Continue;
+
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ICommentService, CommentService>();
 

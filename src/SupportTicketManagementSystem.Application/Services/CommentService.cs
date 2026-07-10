@@ -12,30 +12,31 @@ namespace SupportTicketManagementSystem.Application.Services;
 public class CommentService : ICommentService
 {
     private readonly ICommentRepository _commentRepository;
-    private readonly ITicketRepository _ticketRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly IValidator<CreateCommentDto> _createValidator;
+    private readonly IValidator<CreateCommentRequest> _createRequestValidator;
+    private readonly IValidator<GetCommentsByTicketRequest> _getByTicketRequestValidator;
 
     public CommentService(
         ICommentRepository commentRepository,
-        ITicketRepository ticketRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        IValidator<CreateCommentDto> createValidator)
+        IValidator<CreateCommentRequest> createRequestValidator,
+        IValidator<GetCommentsByTicketRequest> getByTicketRequestValidator)
     {
         _commentRepository = commentRepository;
-        _ticketRepository = ticketRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _createValidator = createValidator;
+        _createRequestValidator = createRequestValidator;
+        _getByTicketRequestValidator = getByTicketRequestValidator;
     }
 
     public async Task<IReadOnlyList<CommentDto>> GetByTicketIdAsync(
         int ticketId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureTicketExistsAsync(ticketId, cancellationToken);
+        var request = new GetCommentsByTicketRequest { TicketId = ticketId };
+        await _getByTicketRequestValidator.ValidateDtoAsync(request, cancellationToken);
 
         var comments = await _commentRepository.GetByTicketIdWithUserAsync(ticketId, cancellationToken);
         return _mapper.Map<IReadOnlyList<CommentDto>>(comments);
@@ -46,8 +47,13 @@ public class CommentService : ICommentService
         CreateCommentDto dto,
         CancellationToken cancellationToken = default)
     {
-        await EnsureTicketExistsAsync(ticketId, cancellationToken);
-        await _createValidator.ValidateDtoAsync(dto, cancellationToken);
+        var request = new CreateCommentRequest
+        {
+            TicketId = ticketId,
+            Dto = dto
+        };
+
+        await _createRequestValidator.ValidateDtoAsync(request, cancellationToken);
 
         var comment = _mapper.Map<Comment>(dto);
         comment.TicketId = ticketId;
@@ -59,13 +65,5 @@ public class CommentService : ICommentService
             ?? throw new NotFoundException(nameof(Comment), comment.Id);
 
         return _mapper.Map<CommentDto>(createdComment);
-    }
-
-    private async Task EnsureTicketExistsAsync(int ticketId, CancellationToken cancellationToken)
-    {
-        if (!await _ticketRepository.ExistsAsync(ticketId, cancellationToken))
-        {
-            throw new NotFoundException(nameof(Ticket), ticketId);
-        }
     }
 }

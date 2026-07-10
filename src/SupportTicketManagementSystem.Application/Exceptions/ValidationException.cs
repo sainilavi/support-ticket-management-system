@@ -2,20 +2,27 @@ namespace SupportTicketManagementSystem.Application.Exceptions;
 
 public class ValidationException : Exception
 {
+    public const string DefaultMessage = Common.Validation.ValidationMessages.ValidationFailed;
+
     public IDictionary<string, string[]> Errors { get; }
 
     public ValidationException(IDictionary<string, string[]> errors)
-        : base("One or more validation errors occurred.")
+        : base(DefaultMessage)
     {
         Errors = errors;
     }
 
     public ValidationException(string propertyName, string errorMessage)
-        : base("One or more validation errors occurred.")
+        : base(DefaultMessage)
     {
         Errors = new Dictionary<string, string[]>
         {
-            { propertyName, new[] { errorMessage } }
+            { ToCamelCase(propertyName), new[] { errorMessage } }
         };
     }
+
+    private static string ToCamelCase(string propertyName) =>
+        string.IsNullOrEmpty(propertyName) || char.IsLower(propertyName[0])
+            ? propertyName
+            : char.ToLowerInvariant(propertyName[0]) + propertyName[1..];
 }
