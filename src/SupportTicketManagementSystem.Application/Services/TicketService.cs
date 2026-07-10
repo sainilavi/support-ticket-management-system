@@ -6,6 +6,7 @@ using SupportTicketManagementSystem.Application.Exceptions;
 using SupportTicketManagementSystem.Application.Interfaces.Repositories;
 using SupportTicketManagementSystem.Application.Interfaces.Services;
 using SupportTicketManagementSystem.Domain.Entities;
+using SupportTicketManagementSystem.Domain.Enums;
 
 namespace SupportTicketManagementSystem.Application.Services;
 
@@ -66,6 +67,8 @@ public class TicketService : ITicketService
         var ticket = await _ticketRepository.GetByIdForUpdateAsync(id, cancellationToken)
             ?? throw new NotFoundException(nameof(Ticket), id);
 
+        EnsureValidStatusTransition(ticket.Status, dto.Status);
+
         _mapper.Map(dto, ticket);
         await _ticketRepository.UpdateAsync(ticket, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -83,5 +86,22 @@ public class TicketService : ITicketService
 
         await _ticketRepository.DeleteAsync(ticket, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void EnsureValidStatusTransition(TicketStatus currentStatus, TicketStatus newStatus)
+    {
+        if (TicketStatusWorkflow.CanTransition(currentStatus, newStatus))
+        {
+            return;
+        }
+
+        var allowedTransitions = TicketStatusWorkflow.GetAllowedTransitions(currentStatus);
+        var allowedMessage = allowedTransitions.Count == 0
+            ? "none (terminal status)"
+            : string.Join(", ", allowedTransitions);
+
+        throw new Exceptions.ValidationException(
+            "Status",
+            $"Cannot transition from '{currentStatus}' to '{newStatus}'. Allowed transitions: {allowedMessage}.");
     }
 }
