@@ -101,7 +101,7 @@ dotnet ef migrations add <MigrationName> \
 ```bash
 dotnet restore
 dotnet build
-dotnet run --project src/SupportTicketManagementSystem.API
+dotnet run --project src/SupportTicketManagementSystem.API --launch-profile https
 ```
 
 **Default URLs (HTTPS profile):**
@@ -111,6 +111,15 @@ dotnet run --project src/SupportTicketManagementSystem.API
 | API | `https://localhost:7263` |
 | Swagger UI | `https://localhost:7263/swagger` |
 | HTTP (alternate) | `http://localhost:5247` |
+
+## Frontend Integration
+
+The React frontend (`FESupportTicketManagementSystem`) connects to this API via:
+
+- **Vite dev proxy:** `http://localhost:5173/api` → `https://localhost:7263/api`
+- **CORS:** `http://localhost:5173` and `https://localhost:5173` are allowed (see `Cors:AllowedOrigins` in `appsettings.json`)
+
+Restart the API after changing CORS configuration.
 
 ## API Documentation
 

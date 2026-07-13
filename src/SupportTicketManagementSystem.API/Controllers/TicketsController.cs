@@ -95,7 +95,7 @@ public class TicketsController : ControllerBase
     [ProducesResponseType(typeof(Models.ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<TicketDto>>> Update(
         int id,
-        [FromBody] UpdateTicketDto dto,
+        [FromBody] UpdateTicketDto dto, 
         CancellationToken cancellationToken)
     {
         var ticket = await _ticketService.UpdateAsync(id, dto, cancellationToken);
